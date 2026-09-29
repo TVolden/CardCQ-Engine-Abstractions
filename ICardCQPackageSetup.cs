@@ -2,9 +2,9 @@
 
 namespace CardCQ.Engine.Abstractions
 {
-    public interface IPackageSetup
+    public interface ICardCQPackageSetup
     {
-        Task Setup(ICQService service);
+        Task Setup(ICardCQService service);
         static abstract Assembly GetAssembly { get; }
         static abstract string Color { get; }
     }

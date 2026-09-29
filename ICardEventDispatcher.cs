@@ -12,5 +12,12 @@
         /// <param name="cardEvent">Instance of the event to be distributed.</param>
         /// <param name="ct"><see cref="CancellationToken"/></param>
         Task DispatchAsync(ICardEvent cardEvent, CancellationToken ct);
+
+        /// <summary>
+        /// Method to raise a control signal asynchronously. Control signals are used to trigger reaction behavior. Control signals wil not be recorded or replayed to when creating game states.
+        /// </summary>
+        /// <param name="signal">Obserable control signal</param>
+        /// <param name="ct"><see cref="CancellationToken"/></param>
+        Task RaiseSignal(IControlSignal signal, CancellationToken ct);
     }
 }
