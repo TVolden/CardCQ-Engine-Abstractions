@@ -1,0 +1,22 @@
+<Project>
+  <!--
+    Turns a code block package's metadata into NuGet metadata, so the package store can list it without loading it:
+      <CardCQColor>#1A5C5C</CardCQColor>   the color of the package's blocks
+      <CardCQScope>game;card</CardCQScope> where its blocks may be used: game, card or both
+    A package without them is a library: a dependency of other packages, never listed itself.
+  -->
+  <PropertyGroup Condition="'$(CardCQColor)' != '' and '$(CardCQScope)' != ''">
+    <!-- Dependency keeps the package installable with a PackageReference; CardCQPackage is what the store lists. -->
+    <PackageType>Dependency;CardCQPackage</PackageType>
+  </PropertyGroup>
+
+  <Target Name="AddCardCQPackageTags" BeforeTargets="GenerateNuspec" Condition="'$(CardCQColor)' != '' and '$(CardCQScope)' != ''">
+    <!-- An item list, so each scope becomes a tag of its own. -->
+    <ItemGroup>
+      <_CardCQScope Include="$(CardCQScope)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <PackageTags>$(PackageTags);cardcq-color-$(CardCQColor.TrimStart('#'));@(_CardCQScope->'cardcq-scope-%(Identity)')</PackageTags>
+    </PropertyGroup>
+  </Target>
+</Project>

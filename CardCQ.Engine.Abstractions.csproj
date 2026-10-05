@@ -15,4 +15,9 @@
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Imported by every project that references this package: turns CardCQColor/CardCQScope into package metadata. -->
+    <None Include="build\CardCQ.Engine.Abstractions.targets" Pack="true" PackagePath="build" />
+  </ItemGroup>
+
 </Project>

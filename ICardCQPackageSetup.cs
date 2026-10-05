@@ -6,6 +6,5 @@ namespace CardCQ.Engine.Abstractions
     {
         Task Setup(ICardCQService service);
         static abstract Assembly GetAssembly { get; }
-        static abstract string Color { get; }
     }
 }
