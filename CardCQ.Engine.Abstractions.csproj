@@ -9,13 +9,35 @@
   <PropertyGroup>
     <PackageId>CardCQ.Engine.Abstractions</PackageId>
     <Version>1.0.0</Version>
-    <Description>Abstractions (commands, queries, events and handlers) for the CardCQ engine.</Description>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<RootNamespace>CardCQ.Engine.Abstractions</RootNamespace>
+	<Title>CardCQ Engine Abstractions</Title>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<Description>Abstractions (commands, queries, events and handlers) for the CardCQ engine. Used to develop packages for CardCQ.</Description>
+	<PackageIcon>CardCQ.png</PackageIcon>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	<Authors>Thomas Volden</Authors>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 
-  <ItemGroup>
+	<ItemGroup>
+		<None Include="CardCQ.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup>
     <!-- Imported by every project that references this package: turns CardCQColor/CardCQScope into package metadata. -->
     <None Include="build\CardCQ.Engine.Abstractions.targets" Pack="true" PackagePath="build" />
   </ItemGroup>
