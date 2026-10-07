@@ -14,10 +14,17 @@
         Task DispatchAsync(ICardEvent cardEvent, CancellationToken ct);
 
         /// <summary>
-        /// Method to raise a control signal asynchronously. Control signals are used to trigger reaction behavior. Control signals wil not be recorded or replayed to when creating game states.
+        /// Method to raise a game signal asynchronously. Game signals are used to trigger reaction behavior. Game signals will not be recorded or replayed to when creating game states.
         /// </summary>
-        /// <param name="signal">Obserable control signal</param>
+        /// <param name="signal">Obserable game signal</param>
         /// <param name="ct"><see cref="CancellationToken"/></param>
-        Task RaiseSignal(IControlSignal signal, CancellationToken ct);
+        Task RaiseSignal(IGameSignal signal, CancellationToken ct);
+
+        /// <summary>
+        /// Method to raise a card signal asynchronously. A card signal triggers each instance of the cards observing it. Like game signals, card signals will not be recorded or replayed.
+        /// </summary>
+        /// <param name="signal">Obserable card signal</param>
+        /// <param name="ct"><see cref="CancellationToken"/></param>
+        Task RaiseSignal(ICardSignal signal, CancellationToken ct);
     }
 }

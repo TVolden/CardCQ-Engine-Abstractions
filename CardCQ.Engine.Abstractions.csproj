@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <PackageId>CardCQ.Engine.Abstractions</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.2.0</Version>
 	<RootNamespace>CardCQ.Engine.Abstractions</RootNamespace>
 	<Title>CardCQ Engine Abstractions</Title>
 	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>

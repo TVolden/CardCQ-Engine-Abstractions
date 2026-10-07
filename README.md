@@ -2,7 +2,7 @@
 
 The contracts for building content packages for the **CardCQ** card game engine.
 
-CardCQ uses a command/query split: **commands** change the game state, **queries** read it. Commands record what happened as **events** and can raise **control signals** that other parts of the game react to. Every concept carries a description that the engine shows to the card game designer in the editor.
+CardCQ uses a command/query split: **commands** change the game state, **queries** read it. Commands record what happened as **events** and can raise **signals** that other parts of the game react to: **game signals** for general game behavior, and **card signals** that each card instance reacts to. Every concept carries a description that the engine shows to the card game designer in the editor.
 
 Reference this package to build your own commands, queries and handlers against the engine without depending on the engine itself.
 
@@ -19,14 +19,15 @@ Targets **.NET 10**. The interfaces use `static abstract` members, so they need 
 | Interface | Purpose |
 |---|---|
 | `ICardCommand` | An action that changes the game state. It returns no data. |
-| `ICardCommandHandler<TCommand>` | Runs a command. It records events and raises control signals through `ICardEventDispatcher`. |
+| `ICardCommandHandler<TCommand>` | Runs a command. It records events and raises signals through `ICardEventDispatcher`. |
 | `ICardQuery<TResult>` | A read-only request that returns a `TResult`. It must not change the game state. |
 | `ICardQueryHandler<TQuery, TResult>` | Answers a query. It gets no event dispatcher, because queries don't change state. |
 | `ICardEvent` | Base class for events. Events record what happened, and the engine replays them to rebuild a game state. |
 | `ICardEventObserver<TEvent>` | Applies a recorded event, for example by updating the package's state. It also runs when events are replayed. |
-| `IControlSignal` | A signal that triggers reactions in the game. Signals are not recorded or replayed. |
-| `IControlSignalObserver<TSignal>` | Reacts when a specific control signal is raised. |
-| `ICardEventDispatcher` | Records events and raises control signals inside the engine. You can mock it in unit tests. |
+| `IGameSignal` | A signal that triggers general game behavior once. Signals are not recorded or replayed. |
+| `ICardSignal` | A signal that cards react to. A card is instantiated when it is added to a collection, and a card signal triggers each instance. |
+| `IGameSignalObserver<TSignal>` | Reacts when a specific game signal is raised. |
+| `ICardEventDispatcher` | Records events and raises game and card signals inside the engine. You can mock it in unit tests. |
 | `ICardCQDispatcher` | Dispatches commands and queries, so a handler can use other commands. |
 | `ICardQueryDispatcher` | Dispatches queries only. |
 | `IBlockValueType` | Marks a custom type that code blocks can take as a parameter or return from a query, such as a card or a collection. Built-in types (`string`, `int`, `bool`, ...) need no marker. |
@@ -35,17 +36,17 @@ Targets **.NET 10**. The interfaces use `static abstract` members, so they need 
 
 The designer-facing text comes from static members:
 
-- `Concept` on commands, queries, control signals and value types says **what** the concept is.
+- `Concept` on commands, queries, signals and value types says **what** the concept is.
 - `Description` on handlers says **how** it is handled.
 
 ### Events or signals?
 
-| | Events (`ICardEvent`) | Control signals (`IControlSignal`) |
+| | Events (`ICardEvent`) | Signals (`IGameSignal`, `ICardSignal`) |
 |---|---|---|
 | Purpose | Record a change to the game state | Let the game react to something as it happens |
 | Recorded and replayed | Yes | No |
 | Sent with | `DispatchAsync` | `RaiseSignal` |
-| Observed by | `ICardEventObserver<TEvent>` | `IControlSignalObserver<TSignal>` |
+| Observed by | `ICardEventObserver<TEvent>` | `IGameSignalObserver<TSignal>` for game signals, card behavior for card signals |
 
 ## Example
 
@@ -82,7 +83,7 @@ public record CreateDie(Guid DieId, int Sides) : ICardCommand
     public static string Concept => "Create a new die with a given number of sides.";
 }
 
-public record DieCreatedSignal(Guid DieId, int Sides) : IControlSignal
+public record DieCreatedSignal(Guid DieId, int Sides) : IGameSignal
 {
     public static string Concept => "A die has been created.";
 }
@@ -123,7 +124,7 @@ public record RollDie(Guid DieId) : ICardCommand
     public static string Concept => "Roll an existing die to get a new value.";
 }
 
-public record DieRolledSignal(Guid DieId, int Sides, int Result) : IControlSignal
+public record DieRolledSignal(Guid DieId, int Sides, int Result) : IGameSignal
 {
     public static string Concept => "A die was rolled, this is the result.";
 }
@@ -181,7 +182,7 @@ public class GetDieValueHandler(DiceRepository repository) : ICardQueryHandler<G
 A signal observer reacts every time a die is rolled, for example to give a bonus on a six.
 
 ```csharp
-public class SixRolledObserver : IControlSignalObserver<DieRolledSignal>
+public class SixRolledObserver : IGameSignalObserver<DieRolledSignal>
 {
     public Task SignalRaised(DieRolledSignal signal)
     {
