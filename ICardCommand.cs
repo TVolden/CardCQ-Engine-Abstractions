@@ -9,6 +9,7 @@
         /// <summary>
         /// A concept description of the command, presented for the card game designer.
         /// </summary>
-        static abstract string Concept { get; }
+        /// <remarks>Virtual rather than abstract so the interface can be used as a generic type argument (e.g. a List&lt;T&gt; of it). Always declare it on the concrete type: the editor reads it from there and shows an empty description otherwise.</remarks>
+        static virtual string Concept => string.Empty;
     }
 }
