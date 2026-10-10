@@ -11,7 +11,7 @@
         /// <summary>
         /// A description of how the query is handled, presented for the card game designer.
         /// </summary>
-        static abstract string Description { get; }
+        static virtual string Description => string.Empty;
 
         /// <summary>
         /// Handles the query and returns the result of type RT. This method is asynchronous and can be cancelled using the provided CancellationToken.

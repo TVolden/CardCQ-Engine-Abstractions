@@ -10,7 +10,7 @@
         /// <summary>
         /// A description of how the command is handled, presented for the card game designer.
         /// </summary>
-        static abstract string Description { get; }
+        static virtual string Description => string.Empty;
 
         /// <summary>
         /// The actual implementation of the command handling logic, which will be executed when the command is invoked.

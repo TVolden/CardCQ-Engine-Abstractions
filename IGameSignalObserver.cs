@@ -1,4 +1,4 @@
-﻿namespace CardCQ.Engine.Abstractions
+namespace CardCQ.Engine.Abstractions
 {
     /// <summary>
     /// Custom observer of game signals, used to initiate behavior in response to a raised signal.
@@ -9,6 +9,7 @@
         /// Triggered by the system when a specific game signal is raised.
         /// </summary>
         /// <param name="signal">The specific game signal</param>
-        Task SignalRaised(T signal);
+        /// <param name="ct"><see cref="CancellationToken"/></param>
+        Task SignalRaised(T signal, CancellationToken ct);
     }
 }

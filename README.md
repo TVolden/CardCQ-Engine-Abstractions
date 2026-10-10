@@ -31,7 +31,7 @@ Targets **.NET 10**. The interfaces use `static abstract` members, so they need 
 | `ICardCQDispatcher` | Dispatches commands and queries, so a handler can use other commands. |
 | `ICardQueryDispatcher` | Dispatches queries only. |
 | `IBlockValueType` | Marks a custom type that code blocks can take as a parameter or return from a query, such as a card or a collection. Built-in types (`string`, `int`, `bool`, ...) need no marker. |
-| `ICardCQService` | Registers command handlers, query handlers, event observers and signal observers with the engine. |
+| `ICardCQService` | Registers command handlers, query handlers, event observers, signal observers and the package's state with the engine. |
 | `ICardCQPackageSetup` | The entry point of a package. The engine calls it to register the package's handlers and observers. |
 
 The designer-facing text comes from static members:
@@ -48,6 +48,18 @@ The designer-facing text comes from static members:
 | Sent with | `DispatchAsync` | `RaiseSignal` |
 | Observed by | `ICardEventObserver<TEvent>` | `IGameSignalObserver<TSignal>` for game signals, card behavior for card signals |
 
+### Game state
+
+The game state is built from events. A package keeps its own state, registered with `RegisterState`, and its event observers update that state from the recorded events. A saved game is its list of events, and the engine replays them to rebuild the state. Packages extend the game by observing the events of other packages and keeping state of their own, without changing the other packages.
+
+Follow these rules, so a replayed game ends in the same state as the original:
+
+1. **Event observers only update state.** They don't dispatch commands, record events or raise signals. React with a signal observer instead, because signals are not replayed.
+2. **Event observers are deterministic.** Make random choices in the command handler and store the result in the event, like the roll in `DieRolledEvent` below.
+3. **An event observer only updates its own package's state.** When it needs data from another package, put that data in the event.
+4. **Events are permanent.** Saved games contain them, so add a new event instead of changing an existing one.
+5. **Keep state in registered state.** An engine runs one game, and `RegisterState` gives it one instance of each state; never keep game state in static fields.
+
 ## Example
 
 This example is a small package that adds dice to the engine:
@@ -60,7 +72,7 @@ Creating a die raises `DieCreatedSignal` and records `DieCreatedEvent`. Every ro
 
 ### Shared state
 
-The handlers and observers share the state of the dice.
+The handlers and observers share the state of the dice. The package registers it with `RegisterState`, so the engine creates it once for the game.
 
 ```csharp
 using CardCQ.Engine.Abstractions;
@@ -184,7 +196,7 @@ A signal observer reacts every time a die is rolled, for example to give a bonus
 ```csharp
 public class SixRolledObserver : IGameSignalObserver<DieRolledSignal>
 {
-    public Task SignalRaised(DieRolledSignal signal)
+    public Task SignalRaised(DieRolledSignal signal, CancellationToken ct)
     {
         if (signal.Result == 6)
         {
@@ -208,6 +220,7 @@ public class DicePackage : ICardCQPackageSetup
 
     public Task Setup(ICardCQService service)
     {
+        service.RegisterState<DiceRepository>();
         service.RegisterCommandHandler<CreateDie, CreateDieHandler>();
         service.RegisterCommandHandler<RollDie, RollDieHandler>();
         service.RegisterQueryHandler<GetDieValue, int, GetDieValueHandler>();
