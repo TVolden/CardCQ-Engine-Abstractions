@@ -16,6 +16,7 @@
         /// The actual implementation of the command handling logic, which will be executed when the command is invoked.
         /// </summary>
         /// <param name="command">The command concept with associated arguments</param>
+        /// <param name="eventDispatcher">The event dispatcher used to dispatch events resulting from the command</param>
         /// <param name="ct"><see cref="CancellationToken"/></param>
         Task HandleAsync(T command, ICardEventDispatcher eventDispatcher, CancellationToken ct);
     }

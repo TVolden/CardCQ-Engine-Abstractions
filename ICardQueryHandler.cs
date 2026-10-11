@@ -16,9 +16,8 @@
         /// <summary>
         /// Handles the query and returns the result of type RT. This method is asynchronous and can be cancelled using the provided CancellationToken.
         /// </summary>
-        /// <param name="query">The query concept which is handled</param>+
+        /// <param name="query">The query concept which is handled</param>
         /// <param name="ct"><see cref="CancellationToken"/></param>
-        /// <returns></returns>
         Task<RT> HandleAsync(T query, CancellationToken ct);
     }
 }

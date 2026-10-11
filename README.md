@@ -6,6 +6,15 @@ CardCQ uses a command/query split: **commands** change the game state, **queries
 
 Reference this package to build your own commands, queries and handlers against the engine without depending on the engine itself.
 
+## Command-query separation
+
+CardCQ follows the command-query separation (CQS) principle: every method either changes state or returns data, never both.
+
+- **Commands** change state and return nothing (`void` or `Task`). Command handlers, event observers, signal observers and the registration methods on `ICardCQService` are all commands.
+- **Queries** return data (`T` or `Task<T>`) and must not change state. Query handlers get no event dispatcher for this reason.
+
+A command doesn't report what it did. When a caller needs to know, it asks with a query afterwards. For example, `RemoveCommandDecorator` returns nothing and does nothing if the decorator isn't there.
+
 ## Installation
 
 ```shell
@@ -31,7 +40,9 @@ Targets **.NET 10**. The interfaces use `static abstract` members, so they need 
 | `ICardCQDispatcher` | Dispatches commands and queries, so a handler can use other commands. |
 | `ICardQueryDispatcher` | Dispatches queries only. |
 | `IBlockValueType` | Marks a custom type that code blocks can take as a parameter or return from a query, such as a card or a collection. Built-in types (`string`, `int`, `bool`, ...) need no marker. |
-| `ICardCQService` | Registers command handlers, query handlers, event observers, signal observers and the package's state with the engine. |
+| `ICardCQService` | Registers instances of command handlers, query handlers, event observers and signal observers with the engine, and adds or removes decorators. Its `Dispatcher` lets handlers dispatch other commands and queries. |
+| `CommandHandlerDecorator<TCommand>` | Base class for wrapping a command handler with extra behavior. Override `BeforeHandleAsync`, `AfterHandleAsync` or `HandleAsync`. |
+| `QueryHandlerDecorator<TQuery, TResult>` | Base class for wrapping a query handler. `AfterHandleAsync` can change the result. |
 | `ICardCQPackageSetup` | The entry point of a package. The engine calls it to register the package's handlers and observers. |
 
 The designer-facing text comes from static members:
@@ -50,7 +61,7 @@ The designer-facing text comes from static members:
 
 ### Game state
 
-The game state is built from events. A package keeps its own state, registered with `RegisterState`, and its event observers update that state from the recorded events. A saved game is its list of events, and the engine replays them to rebuild the state. Packages extend the game by observing the events of other packages and keeping state of their own, without changing the other packages.
+The game state is built from events. A package keeps its own state, which it creates in `Setup` and passes to its handlers and observers, and its event observers update that state from the recorded events. A saved game is its list of events, and the engine replays them to rebuild the state. Packages extend the game by observing the events of other packages and keeping state of their own, without changing the other packages.
 
 Follow these rules, so a replayed game ends in the same state as the original:
 
@@ -58,7 +69,7 @@ Follow these rules, so a replayed game ends in the same state as the original:
 2. **Event observers are deterministic.** Make random choices in the command handler and store the result in the event, like the roll in `DieRolledEvent` below.
 3. **An event observer only updates its own package's state.** When it needs data from another package, put that data in the event.
 4. **Events are permanent.** Saved games contain them, so add a new event instead of changing an existing one.
-5. **Keep state in registered state.** An engine runs one game, and `RegisterState` gives it one instance of each state; never keep game state in static fields.
+5. **Create state in `Setup`.** An engine runs one game and calls `Setup` once for it, so state created there belongs to that game; never keep game state in static fields.
 
 ## Example
 
@@ -72,7 +83,7 @@ Creating a die raises `DieCreatedSignal` and records `DieCreatedEvent`. Every ro
 
 ### Shared state
 
-The handlers and observers share the state of the dice. The package registers it with `RegisterState`, so the engine creates it once for the game.
+The handlers and observers share the state of the dice. The package creates one `DiceRepository` in `Setup` and passes it to each of them, so the game has one instance.
 
 ```csharp
 using CardCQ.Engine.Abstractions;
@@ -216,17 +227,17 @@ using System.Reflection;
 public class DicePackage : ICardCQPackageSetup
 {
     public static Assembly GetAssembly => typeof(DicePackage).Assembly;
-    public static string Color => "#3A7BD5";
 
     public Task Setup(ICardCQService service)
     {
-        service.RegisterState<DiceRepository>();
-        service.RegisterCommandHandler<CreateDie, CreateDieHandler>();
-        service.RegisterCommandHandler<RollDie, RollDieHandler>();
-        service.RegisterQueryHandler<GetDieValue, int, GetDieValueHandler>();
-        service.RegisterEventObserver<DieCreatedEvent, DieCreatedEventObserver>();
-        service.RegisterEventObserver<DieRolledEvent, DieRolledEventObserver>();
-        service.RegisterSignalObserver<DieRolledSignal, SixRolledObserver>();
+        var dice = new DiceRepository();
+
+        service.RegisterCommandHandler(new CreateDieHandler(service.Dispatcher));
+        service.RegisterCommandHandler(new RollDieHandler(dice));
+        service.RegisterQueryHandler(new GetDieValueHandler(dice));
+        service.RegisterEventObserver(new DieCreatedEventObserver(dice));
+        service.RegisterEventObserver(new DieRolledEventObserver(dice));
+        service.RegisterSignalObserver(new SixRolledObserver());
         return Task.CompletedTask;
     }
 }
