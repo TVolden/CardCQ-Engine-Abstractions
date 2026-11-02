@@ -8,6 +8,9 @@ namespace CardCQ.Engine.Abstractions
     {
         ICardCQDispatcher Dispatcher { get; }
 
+        /// <summary>Pauses the game while a player makes a choice.</summary>
+        IPlayerWaits PlayerWaits { get; }
+
         /// <summary>
         /// Replaces an existing handler, keeping its decorators.
         /// </summary>
