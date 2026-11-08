@@ -34,7 +34,7 @@ Targets **.NET 10**. The interfaces use `static abstract` members, so they need 
 | `ICardEvent` | Base class for events. Events record what happened, and the engine replays them to rebuild a game state. |
 | `ICardEventObserver<TEvent>` | Applies a recorded event, for example by updating the package's state. It also runs when events are replayed. |
 | `IGameSignal` | A signal that triggers general game behavior once. Signals are not recorded or replayed. |
-| `ICardSignal` | A signal that cards react to. A card is instantiated when it is added to a collection, and a card signal triggers each instance. |
+| `ICardSignal` | A signal that a card reacts to: it runs the `when` blocks of the card named by its `CardName` (the card's `card "Name":` block in the script). A package raises it once for each card instance it concerns and carries the instance, which the card's behavior reads as a signal parameter, e.g. `CardActivated(Card Card)` with `string ICardSignal.CardName => Card.Name`. |
 | `IGameSignalObserver<TSignal>` | Reacts when a specific game signal is raised. |
 | `ICardEventDispatcher` | Records events and raises game and card signals inside the engine. You can mock it in unit tests. |
 | `ICardCQDispatcher` | Dispatches commands and queries, so a handler can use other commands. |
